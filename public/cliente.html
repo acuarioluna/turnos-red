@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Eventos de TurnosRed</title>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 40px;
+        font-family: Arial, sans-serif;
+        background-color: #f4f7fb;
+        color: #1f2937;
+      }
+
+      main {
+        max-width: 850px;
+        margin: auto;
+        padding: 30px;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgb(0 0 0 / 10%);
+      }
+
+      h1 {
+        color: #123b69;
+      }
+
+      #estado {
+        padding: 12px;
+        border-radius: 8px;
+        background-color: #fff3cd;
+      }
+
+      #estado.conectado {
+        color: #155724;
+        background-color: #d4edda;
+      }
+
+      .evento {
+        margin-top: 15px;
+        padding: 15px;
+        border-left: 5px solid #2463a5;
+        border-radius: 6px;
+        background-color: #eef5fc;
+      }
+
+      pre {
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <h1>Eventos en tiempo real de TurnosRed</h1>
+
+      <p id="estado">Conectando con el servidor...</p>
+
+      <section id="eventos">
+        <p>Esperando eventos de turnos...</p>
+      </section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      const socket = io();
+      const estado = document.querySelector("#estado");
+      const eventos = document.querySelector("#eventos");
+
+      socket.on("connect", () => {
+        estado.textContent = `Conectado al servidor: ${socket.id}`;
+        estado.classList.add("conectado");
+      });
+
+      socket.on("disconnect", () => {
+        estado.textContent = "Cliente desconectado.";
+        estado.classList.remove("conectado");
+      });
+
+      function mostrarEvento(tipo, turno) {
+        const contenedor = document.createElement("article");
+        const titulo = document.createElement("strong");
+        const contenido = document.createElement("pre");
+
+        contenedor.className = "evento";
+        titulo.textContent = tipo;
+        contenido.textContent = JSON.stringify(turno, null, 2);
+
+        contenedor.append(titulo, contenido);
+        eventos.prepend(contenedor);
+      }
+
+      socket.on("turno:nuevo", (turno) => {
+        mostrarEvento("Nuevo turno", turno);
+      });
+
+      socket.on("turno:actualizado", (turno) => {
+        mostrarEvento("Turno actualizado", turno);
+      });
+
+      socket.on("turno:eliminado", (turno) => {
+        mostrarEvento("Turno eliminado", turno);
+      });
+    </script>
+  </body>
+</html>

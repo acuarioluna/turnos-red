@@ -1,0 +1,30 @@
+[
+  {
+    "id": 102,
+    "paciente": "Carlos Ruiz",
+    "documento": "31654210",
+    "especialidad": "PEDIATRÍA",
+    "fecha": "2026-08-14",
+    "hora": "10:00",
+    "confirmado": true
+  },
+  {
+    "id": 103,
+    "paciente": "Ana Gómez",
+    "documento": "28900456",
+    "especialidad": "ODONTOLOGÍA",
+    "fecha": "2026-08-15",
+    "hora": "11:30",
+    "confirmado": true,
+    "observaciones": "Control anual"
+  },
+  {
+    "id": 104,
+    "paciente": "Lucía Fernández",
+    "documento": "40555123",
+    "especialidad": "NUTRICIÓN",
+    "fecha": "2026-08-16",
+    "hora": "09:15",
+    "confirmado": false
+  }
+]
