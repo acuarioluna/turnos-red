@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "nombre": "Elena Morales",
+    "matricula": "MP-1001",
+    "especialidad": "Pediatría",
+    "disponible": true
+  },
+  {
+    "id": 2,
+    "nombre": "Javier López",
+    "matricula": "MP-1002",
+    "especialidad": "Odontología",
+    "disponible": true
+  },
+  {
+    "id": 3,
+    "nombre": "Sofía Torres",
+    "matricula": "MP-1003",
+    "especialidad": "Nutrición",
+    "disponible": false
+  },
+  {
+    "id": 4,
+    "nombre": "Martín Pérez",
+    "matricula": "MP-1004",
+    "especialidad": "Clínica médica",
+    "disponible": true
+  }
+]

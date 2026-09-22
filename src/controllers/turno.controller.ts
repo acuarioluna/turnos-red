@@ -1,17 +1,28 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 
+import { AppError } from "../errors/app-error.js";
 import type { TurnoCrudo } from "../models/turno.model.js";
 import { turnoService } from "../services/turno.service.js";
 
-function convertirId(valor: string | string[] | undefined): number | null {
-  if (typeof valor !== "string") {
-    return null;
+function convertirId(valor: string | string[] | undefined): number {
+  if (typeof valor !== "string" || !/^\d+$/.test(valor)) {
+    throw new AppError(
+      400,
+      "El ID debe ser un entero positivo.",
+      "VALIDATION_ERROR",
+      [{ field: "id", message: "Usá un identificador numérico positivo." }],
+    );
   }
 
   const id = Number(valor);
 
-  if (!Number.isInteger(id) || id <= 0) {
-    return null;
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    throw new AppError(
+      400,
+      "El ID debe ser un entero positivo válido.",
+      "VALIDATION_ERROR",
+      [{ field: "id", message: "El identificador está fuera del rango válido." }],
+    );
   }
 
   return id;
@@ -24,96 +35,88 @@ export function listarTurnos(_req: Request, res: Response): void {
 
 export function obtenerTurnoPorId(req: Request, res: Response): void {
   const id = convertirId(req.params.id);
-
-  if (id === null) {
-    res.status(400).json({ mensaje: "El ID debe ser un entero positivo." });
-    return;
-  }
-
   const turno = turnoService.obtenerPorId(id);
 
   if (!turno) {
-    res.status(404).json({ mensaje: "Turno no encontrado." });
-    return;
+    throw new AppError(404, "Turno no encontrado.", "APPOINTMENT_NOT_FOUND");
   }
 
   res.status(200).json(turno);
 }
 
-export async function crearTurno(req: Request, res: Response): Promise<void> {
+export async function crearTurno(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
     const turno = await turnoService.crear(req.body as TurnoCrudo);
 
     if (!turno) {
-      res.status(400).json({
-        mensaje: "Los datos son inválidos o el ID ya existe.",
-      });
-      return;
+      throw new AppError(
+        400,
+        "Los datos son inválidos o el ID ya existe.",
+        "VALIDATION_ERROR",
+      );
     }
 
     res.status(201).json(turno);
-  } catch (error) {
-    console.error("Error al crear el turno:", error);
-    res.status(500).json({ mensaje: "Error interno del servidor." });
+  } catch (error: unknown) {
+    next(error);
   }
 }
 
 export async function actualizarTurno(
   req: Request,
   res: Response,
+  next: NextFunction,
 ): Promise<void> {
   try {
     const id = convertirId(req.params.id);
 
-    if (id === null) {
-      res.status(400).json({ mensaje: "El ID debe ser un entero positivo." });
-      return;
-    }
-
     if (!turnoService.obtenerPorId(id)) {
-      res.status(404).json({ mensaje: "Turno no encontrado." });
-      return;
+      throw new AppError(
+        404,
+        "Turno no encontrado.",
+        "APPOINTMENT_NOT_FOUND",
+      );
     }
 
     const turno = await turnoService.actualizar(id, req.body as TurnoCrudo);
 
     if (!turno) {
-      res.status(400).json({ mensaje: "Los datos son inválidos." });
-      return;
+      throw new AppError(
+        400,
+        "Los datos del turno son inválidos.",
+        "VALIDATION_ERROR",
+      );
     }
 
     res.status(200).json(turno);
-  } catch (error) {
-    console.error("Error al actualizar el turno:", error);
-    res.status(500).json({ mensaje: "Error interno del servidor." });
+  } catch (error: unknown) {
+    next(error);
   }
 }
 
 export async function eliminarTurno(
   req: Request,
   res: Response,
+  next: NextFunction,
 ): Promise<void> {
   try {
     const id = convertirId(req.params.id);
-
-    if (id === null) {
-      res.status(400).json({ mensaje: "El ID debe ser un entero positivo." });
-      return;
-    }
-
     const turno = await turnoService.eliminar(id);
 
     if (!turno) {
-      res.status(404).json({ mensaje: "Turno no encontrado." });
-      return;
+      throw new AppError(
+        404,
+        "Turno no encontrado.",
+        "APPOINTMENT_NOT_FOUND",
+      );
     }
 
-    res.status(200).json({
-      mensaje: "Turno eliminado correctamente.",
-      turno,
-    });
-  } catch (error) {
-    console.error("Error al eliminar el turno:", error);
-    res.status(500).json({ mensaje: "Error interno del servidor." });
+    res.status(204).send();
+  } catch (error: unknown) {
+    next(error);
   }
 }
