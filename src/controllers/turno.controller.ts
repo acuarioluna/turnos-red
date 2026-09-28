@@ -3,6 +3,7 @@ import type { NextFunction, Request, Response } from "express";
 import { AppError } from "../errors/app-error.js";
 import type { TurnoCrudo } from "../models/turno.model.js";
 import { turnoService } from "../services/turno.service.js";
+import { appointmentQuerySchema } from "../schemas/appointment.schema.js";
 
 function convertirId(valor: string | string[] | undefined): number {
   if (typeof valor !== "string" || !/^\d+$/.test(valor)) {
@@ -28,27 +29,52 @@ function convertirId(valor: string | string[] | undefined): number {
   return id;
 }
 
-export function listarTurnos(_req: Request, res: Response): void {
-  const turnos = turnoService.obtenerTodos();
-  res.status(200).json(turnos);
-}
+export async function listarTurnos(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const status = 200;
 
-export function obtenerTurnoPorId(req: Request, res: Response): void {
-  const id = convertirId(req.params.id);
-  const turno = turnoService.obtenerPorId(id);
+  try {
+    const filtros = appointmentQuerySchema.parse(req.query);
+    const turnos = turnoService.obtenerTodos(filtros);
 
-  if (!turno) {
-    throw new AppError(404, "Turno no encontrado.", "APPOINTMENT_NOT_FOUND");
+    return void res.status(status).json(turnos);
+  } catch (error: unknown) {
+    return next(error);
   }
-
-  res.status(200).json(turno);
 }
 
+
+
+export async function obtenerTurnoPorId(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const status = 200;
+
+  try {
+    const id = convertirId(req.params.id);
+    const turno = turnoService.obtenerPorId(id);
+
+    if (!turno) {
+      throw new AppError(404, "Turno no encontrado.", "APPOINTMENT_NOT_FOUND");
+    }
+
+    return void res.status(status).json(turno);
+  } catch (error: unknown) {
+    return next(error);
+  }
+}
 export async function crearTurno(
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> {
+  const status = 201;
+
   try {
     const turno = await turnoService.crear(req.body as TurnoCrudo);
 
@@ -60,17 +86,20 @@ export async function crearTurno(
       );
     }
 
-    res.status(201).json(turno);
+    return void res.status(status).json(turno);
   } catch (error: unknown) {
-    next(error);
+    return next(error);
   }
 }
+
 
 export async function actualizarTurno(
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> {
+  const status = 200;
+
   try {
     const id = convertirId(req.params.id);
 
@@ -82,7 +111,10 @@ export async function actualizarTurno(
       );
     }
 
-    const turno = await turnoService.actualizar(id, req.body as TurnoCrudo);
+    const turno = await turnoService.actualizar(
+      id,
+      req.body as TurnoCrudo,
+    );
 
     if (!turno) {
       throw new AppError(
@@ -92,17 +124,21 @@ export async function actualizarTurno(
       );
     }
 
-    res.status(200).json(turno);
+    return void res.status(status).json(turno);
   } catch (error: unknown) {
-    next(error);
+    return next(error);
   }
 }
+   
+
 
 export async function eliminarTurno(
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> {
+  const status = 204;
+
   try {
     const id = convertirId(req.params.id);
     const turno = await turnoService.eliminar(id);
@@ -115,8 +151,8 @@ export async function eliminarTurno(
       );
     }
 
-    res.status(204).send();
+    return void res.status(status).send();
   } catch (error: unknown) {
-    next(error);
+    return next(error);
   }
 }

@@ -29,22 +29,42 @@ function parseId(value: string | string[] | undefined): number {
   return id;
 }
 
-export function listDoctors(req: Request, res: Response): void {
-  const filters = doctorQuerySchema.parse(req.query);
-  const doctors = doctorService.getAll(filters);
+export async function listDoctors(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const status = 200;
 
-  res.status(200).json(doctors);
+  try {
+    const filters = doctorQuerySchema.parse(req.query);
+    const doctors = doctorService.getAll(filters);
+
+    return void res.status(status).json(doctors);
+  } catch (error: unknown) {
+    return next(error);
+  }
 }
 
-export function getDoctorById(req: Request, res: Response): void {
-  const id = parseId(req.params.id);
-  const doctor = doctorService.getById(id);
+export async function getDoctorById(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const status = 200;
 
-  if (!doctor) {
-    throw new AppError(404, "Médico no encontrado.", "DOCTOR_NOT_FOUND");
+  try {
+    const id = parseId(req.params.id);
+    const doctor = doctorService.getById(id);
+
+    if (!doctor) {
+      throw new AppError(404, "Médico no encontrado.", "DOCTOR_NOT_FOUND");
+    }
+
+    return void res.status(status).json(doctor);
+  } catch (error: unknown) {
+    return next(error);
   }
-
-  res.status(200).json(doctor);
 }
 
 export async function createDoctor(
@@ -52,11 +72,14 @@ export async function createDoctor(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
+  const status = 201;
+
   try {
     const doctor = await doctorService.create(req.body as Doctor);
-    res.status(201).json(doctor);
+
+    return void res.status(status).json(doctor);
   } catch (error: unknown) {
-    next(error);
+    return next(error);
   }
 }
 
@@ -65,13 +88,15 @@ export async function updateDoctor(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
+  const status = 200;
+
   try {
     const id = parseId(req.params.id);
     const doctor = await doctorService.update(id, req.body as DoctorUpdate);
 
-    res.status(200).json(doctor);
+    return void res.status(status).json(doctor);
   } catch (error: unknown) {
-    next(error);
+    return next(error);
   }
 }
 
@@ -80,12 +105,14 @@ export async function deleteDoctor(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
+  const status = 204;
+
   try {
     const id = parseId(req.params.id);
     await doctorService.delete(id);
 
-    res.status(204).send();
+    return void res.status(status).send();
   } catch (error: unknown) {
-    next(error);
+    return next(error);
   }
 }

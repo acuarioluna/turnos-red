@@ -1,5 +1,46 @@
 import type { Turno, TurnoCrudo } from "../models/turno.model.js";
 
+function normalizarId(valor: unknown): number | null {
+  if (typeof valor !== "number" && typeof valor !== "string") {
+    return null;
+  }
+
+  if (typeof valor === "string" && !/^\d+$/.test(valor.trim())) {
+    return null;
+  }
+
+  const numero = Number(valor);
+
+  return Number.isSafeInteger(numero) && numero > 0 ? numero : null;
+}
+
+function normalizarEspecialidad(valor: unknown): string | null {
+  if (typeof valor !== "string") {
+    return null;
+  }
+
+  const simplificar = (texto: string): string =>
+    texto
+      .trim()
+      .replace(/\s+/g, " ")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+  const especialidades = [
+    "Clínica médica",
+    "Pediatría",
+    "Odontología",
+    "Nutrición",
+  ];
+
+  return (
+    especialidades.find(
+      (especialidad) => simplificar(especialidad) === simplificar(valor),
+    ) ?? null
+  );
+}
+
 function normalizarFecha(valor: unknown): string | null {
   if (typeof valor !== "string") {
     return null;
@@ -25,7 +66,8 @@ function normalizarFecha(valor: unknown): string | null {
     return null;
   }
 
-  const fechaComprobacion = new Date(Date.UTC(anio, mes - 1, dia));
+  const fechaComprobacion = new Date(0);
+  fechaComprobacion.setUTCFullYear(anio, mes - 1, dia);
 
   if (
     fechaComprobacion.getUTCFullYear() !== anio ||
@@ -35,7 +77,7 @@ function normalizarFecha(valor: unknown): string | null {
     return null;
   }
 
-  return `${anio}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+  return `${String(anio).padStart(4, "0")}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
 }
 
 function normalizarHora(valor: unknown): string | null {
@@ -52,7 +94,7 @@ function normalizarHora(valor: unknown): string | null {
   const horas = Number(resultado[1]);
   const minutos = Number(resultado[2]);
 
-  if (horas < 0 || horas > 23 || minutos < 0 || minutos > 59) {
+  if (horas > 23 || minutos > 59) {
     return null;
   }
 
@@ -97,7 +139,9 @@ export function normalizarTurno(
   if (crudo === null || crudo === undefined) {
     return null;
   }
-  const id = Number(crudo.id);
+
+  const id = normalizarId(crudo.id);
+  const medicoId = normalizarId(crudo.medicoId);
 
   const paciente =
     typeof crudo.paciente === "string"
@@ -105,25 +149,19 @@ export function normalizarTurno(
       : "";
 
   const documento =
-    typeof crudo.documento === "string" || typeof crudo.documento === "number"
-      ? String(crudo.documento).trim()
-      : "";
+    typeof crudo.documento === "string" ? crudo.documento.trim() : "";
 
-  const especialidad =
-    typeof crudo.especialidad === "string"
-      ? crudo.especialidad.trim().replace(/\s+/g, " ").toUpperCase()
-      : "";
-
+  const especialidad = normalizarEspecialidad(crudo.especialidad);
   const fecha = normalizarFecha(crudo.fecha);
   const hora = normalizarHora(crudo.hora);
   const confirmado = normalizarConfirmado(crudo.confirmado);
 
   if (
-    !Number.isInteger(id) ||
-    id <= 0 ||
+    id === null ||
+    medicoId === null ||
     paciente === "" ||
     documento === "" ||
-    especialidad === "" ||
+    especialidad === null ||
     fecha === null ||
     hora === null ||
     confirmado === null
@@ -136,6 +174,7 @@ export function normalizarTurno(
     paciente,
     documento,
     especialidad,
+    medicoId,
     fecha,
     hora,
     confirmado,
