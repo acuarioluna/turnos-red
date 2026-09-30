@@ -217,3 +217,28 @@ La API separa las rutas de la lógica de cada entidad mediante controladores par
 Los controladores usan funciones asincrónicas y bloques `try/catch`. Los errores se envían con `next(error)` al middleware central, que devuelve una respuesta JSON uniforme. El middleware maneja errores de validación, errores de la aplicación, JSON inválido y errores internos.
 
 Las respuestas exitosas usan los códigos HTTP correspondientes: 200 para consultas y actualizaciones, 201 para creaciones y 204 para eliminaciones. Las rutas inexistentes responden 404.
+
+## Propuesta de módulo de pacientes y turnos
+
+La propuesta conceptual del módulo de pacientes y turnos se encuentra documentada en el archivo [`pacientes-turnos.md`](./pacientes-turnos.md).
+
+El documento incluye:
+
+- Modelado conceptual de las entidades Paciente y Turno.
+- Datos mínimos necesarios para cada entidad.
+- Relaciones entre pacientes, médicos y turnos.
+- Endpoints RESTful propuestos.
+- Ejemplos de solicitudes y respuestas JSON.
+- Organización de responsabilidades según principios de Clean Architecture.
+
+Los endpoints propuestos son:
+
+| Método | Ruta | Función |
+| --- | --- | --- |
+| POST | `/pacientes` | Registrar un nuevo paciente |
+| POST | `/turnos` | Crear un turno asociado a un paciente y un médico |
+
+Las peticiones de Postman utilizan la variable de entorno `{{baseUrl}}`, cuyo valor local es:
+
+```text
+http://localhost:3000
